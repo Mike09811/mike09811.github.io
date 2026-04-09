@@ -11,10 +11,15 @@
     var code = location.pathname.replace("/r/", "").replace(/\//g, "") || new URLSearchParams(location.search).get("code");
     if (code) {
       fetch(r.replace("/api", "") + "/r/" + code)
-        .then(function(s) { return s.json(); })
-        .then(function(d) {
-          if (d && d.data && d.data.targetUrl) {
-            location.replace(d.data.targetUrl);
+        .then(function(response) {
+          if (response.redirected && response.url) {
+            location.replace(response.url);
+          } else {
+            return response.json().then(function(d) {
+              if (d && d.data && d.data.targetUrl) {
+                location.replace(d.data.targetUrl);
+              }
+            });
           }
         })
         .catch(function() {
