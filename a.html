@@ -7,10 +7,14 @@
 <body>
   <script>
     var r = "http://43.130.231.67/api";
-    // 支持两种格式: /r/CODE 和 ?code=CODE
-    var path = location.pathname;
-    var lastSlashIndex = path.lastIndexOf("/r/");
-    var code = lastSlashIndex !== -1 ? path.substring(lastSlashIndex + 3) : new URLSearchParams(location.search).get("code");
+    // 优先从 URL 参数获取 code
+    var code = new URLSearchParams(location.search).get("code");
+    if (!code) {
+      // 如果没有参数，尝试从路径获取
+      var path = location.pathname;
+      var lastSlashIndex = path.lastIndexOf("/r/");
+      code = lastSlashIndex !== -1 ? path.substring(lastSlashIndex + 3) : null;
+    }
     if (code) {
       fetch(r.replace("/api", "") + "/r/" + code)
         .then(function(response) {
