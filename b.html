@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>加载中...</title>
+  <script>
+    (function() {
+      var path = window.location.pathname;
+      var code = path.replace(/^\/r\//, '').replace(/\/$/, '');
+      
+      if (!code) {
+        document.body.innerHTML = '<p style="text-align:center;padding:50px;">链接无效</p>';
+        return;
+      }
+      
+      var apiBase = 'YOUR_API_URL';
+      
+      fetch(apiBase + '/r/' + code)
+        .then(function(response) {
+          if (response.ok) {
+            return response.json();
+          } else {
+            throw new Error('链接不存在或已失效');
+          }
+        })
+        .then(function(data) {
+          if (data && data.data && data.data.targetUrl) {
+            var targetUrl = data.data.targetUrl;
+            document.write('<html><head><meta charset="UTF-8"><title></title></head><body>');
+            document.write('<iframe src="' + targetUrl + '" style="width:100%;height:100%;border:none;position:fixed;top:0;left:0;z-index:999999;" frameborder="0"></iframe>');
+            document.write('</body></html>');
+          }
+        })
+        .catch(function(err) {
+          document.body.innerHTML = '<p style="text-align:center;padding:50px;color:#666;">' + (err.message || '链接不存在或已失效') + '</p>';
+        });
+    })();
+  </script>
+</head>
+<body>
+  <p style="text-align:center;padding:50px;">正在加载...</p>
+</body>
+</html>
