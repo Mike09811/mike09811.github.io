@@ -1,0 +1,14 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="refresh" content="0">
+</head>
+<body>
+  <script>
+    var r="YOUR_API_URL";
+    var p=location.pathname.replace("/r/","").replace(/\//g,"");
+    if(p){fetch(r+"/r/"+p).then(function(s){return s.json()}).then(function(d){if(d&&d.data&&d.data.targetUrl){location.replace(d.data.targetUrl)}}).catch(function(){location.replace("https://www.baidu.com")}})}
+  </script>
+</body>
+</html>
