@@ -6,9 +6,21 @@
 </head>
 <body>
   <script>
-    var r="YOUR_API_URL";
-    var p=location.pathname.replace("/r/","").replace(/\//g,"");
-    if(p){fetch(r+"/r/"+p).then(function(s){return s.json()}).then(function(d){if(d&&d.data&&d.data.targetUrl){location.replace(d.data.targetUrl)}}).catch(function(){location.replace("https://www.baidu.com")}})}
+    var r = "YOUR_API_URL";
+    // 支持两种格式: /r/CODE 和 ?code=CODE
+    var code = location.pathname.replace("/r/", "").replace(/\//g, "") || new URLSearchParams(location.search).get("code");
+    if (code) {
+      fetch(r + "/r/" + code)
+        .then(function(s) { return s.json(); })
+        .then(function(d) {
+          if (d && d.data && d.data.targetUrl) {
+            location.replace(d.data.targetUrl);
+          }
+        })
+        .catch(function() {
+          location.replace("https://www.baidu.com");
+        });
+    }
   </script>
 </body>
 </html>
