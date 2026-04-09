@@ -6,7 +6,7 @@
 </head>
 <body>
   <script>
-    var r = "YOUR_API_URL";
+    var r = "http://43.130.231.67/api";
     // 支持两种格式: /r/CODE 和 ?code=CODE
     var code = location.pathname.replace("/r/", "").replace(/\//g, "") || new URLSearchParams(location.search).get("code");
     if (code) {
