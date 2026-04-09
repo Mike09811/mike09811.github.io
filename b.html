@@ -3,52 +3,207 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>加载中...</title>
+  <title>页面加载中...</title>
+  <style>
+    html, body {
+      margin: 0;
+      width: 100%;
+      height: 100%;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: #eef2f7;
+    }
+
+    body {
+      overflow: hidden;
+    }
+
+    .shell {
+      position: fixed;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+      box-sizing: border-box;
+      background: linear-gradient(180deg, #eef2f7 0%, #f8fafc 100%);
+    }
+
+    .panel {
+      width: 100%;
+      max-width: 460px;
+      background: rgba(255, 255, 255, 0.96);
+      border-radius: 18px;
+      box-shadow: 0 18px 44px rgba(15, 23, 42, 0.12);
+      padding: 28px 24px;
+      text-align: center;
+    }
+
+    .title {
+      margin: 0 0 12px;
+      color: #0f172a;
+      font-size: 20px;
+      font-weight: 700;
+    }
+
+    .desc {
+      margin: 0;
+      color: #64748b;
+      font-size: 14px;
+      line-height: 1.7;
+      word-break: break-word;
+    }
+
+    .actions {
+      margin-top: 18px;
+      display: none;
+      gap: 12px;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+
+    .actions.show {
+      display: flex;
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 132px;
+      padding: 11px 18px;
+      border-radius: 999px;
+      border: 1px solid #dbe3ee;
+      background: #fff;
+      color: #0f172a;
+      font-size: 14px;
+      text-decoration: none;
+      cursor: pointer;
+    }
+
+    .btn.primary {
+      background: #0f172a;
+      border-color: #0f172a;
+      color: #fff;
+    }
+
+    .frame {
+      position: fixed;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      border: none;
+      background: #fff;
+      display: none;
+    }
+  </style>
   <script>
     (function() {
-      var params = new URLSearchParams(window.location.search);
-      var code = params.get('code');
-      var apiBase = params.get('api') || window.FANGHONG_API_BASE || 'http://43.130.231.67';
+      var shell;
+      var desc;
+      var actions;
+      var openLink;
+      var title;
 
-      if (!code) {
-        var path = window.location.pathname;
-        var marker = '/r/';
-        var markerIndex = path.lastIndexOf(marker);
-        code = markerIndex !== -1 ? path.substring(markerIndex + marker.length).replace(/\/+$/, '') : '';
-      }
-
-      if (!code) {
-        document.body.innerHTML = '<p style="text-align:center;padding:50px;">链接无效</p>';
-        return;
-      }
-
-      fetch(apiBase.replace(/\/+$/, '') + '/r/' + encodeURIComponent(code) + '?stage=transit&format=json', {
-        headers: {
-          Accept: 'application/json'
+      var showMessage = function(message, showOpenButton) {
+        if (desc) {
+          desc.textContent = message;
         }
-      })
-        .then(function(response) {
-          if (response.ok) {
-            return response.json();
-          } else {
+        if (actions) {
+          actions.className = showOpenButton ? 'actions show' : 'actions';
+        }
+      };
+
+      var mountFrame = function(targetUrl) {
+        document.title = '页面加载中...';
+        if (openLink) {
+          openLink.href = targetUrl;
+        }
+        var iframe = document.createElement('iframe');
+        iframe.className = 'frame';
+        iframe.referrerPolicy = 'no-referrer';
+        iframe.setAttribute('allowfullscreen', 'true');
+        iframe.src = targetUrl;
+        iframe.onload = function() {
+          iframe.style.display = 'block';
+          if (shell) {
+            shell.style.display = 'none';
+          }
+        };
+        document.body.appendChild(iframe);
+
+        // 某些站点会拒绝 iframe，这里保留一个兜底入口给用户手动打开
+        window.setTimeout(function() {
+          if (shell && shell.style.display !== 'none') {
+            showMessage('目标页面可能限制了嵌入显示。你可以直接打开目标页继续访问。', true);
+          }
+        }, 4000);
+      };
+
+      var init = function() {
+        shell = document.getElementById('shell');
+        desc = document.getElementById('desc');
+        actions = document.getElementById('actions');
+        openLink = document.getElementById('open-link');
+        title = document.getElementById('title');
+
+        var params = new URLSearchParams(window.location.search);
+        var code = params.get('code');
+        var apiBase = params.get('api') || window.FANGHONG_API_BASE || 'http://43.130.231.67';
+
+        if (!code) {
+          var path = window.location.pathname;
+          var marker = '/r/';
+          var markerIndex = path.lastIndexOf(marker);
+          code = markerIndex !== -1 ? path.substring(markerIndex + marker.length).replace(/\/+$/, '') : '';
+        }
+
+        if (!code) {
+          title.textContent = '链接无效';
+          showMessage('未获取到有效短码，请检查链接是否完整。', false);
+          return;
+        }
+
+        fetch(apiBase.replace(/\/+$/, '') + '/r/' + encodeURIComponent(code) + '?stage=transit&format=json', {
+          headers: {
+            Accept: 'application/json'
+          }
+        })
+          .then(function(response) {
+            if (response.ok) {
+              return response.json();
+            }
             throw new Error('链接不存在或已失效');
-          }
-        })
-        .then(function(data) {
-          if (data && data.data && data.data.targetUrl) {
-            var targetUrl = data.data.targetUrl;
-            document.write('<html><head><meta charset="UTF-8"><title></title></head><body>');
-            document.write('<iframe src="' + targetUrl + '" referrerpolicy="no-referrer" allowfullscreen style="width:100%;height:100%;border:none;position:fixed;top:0;left:0;z-index:999999;background:#fff;" frameborder="0"></iframe>');
-            document.write('</body></html>');
-          }
-        })
-        .catch(function(err) {
-          document.body.innerHTML = '<p style="text-align:center;padding:50px;color:#666;">' + (err.message || '链接不存在或已失效') + '</p>';
-        });
+          })
+          .then(function(data) {
+            if (data && data.data && data.data.targetUrl) {
+              mountFrame(data.data.targetUrl);
+              return;
+            }
+            throw new Error('未获取到目标地址');
+          })
+          .catch(function(err) {
+            title.textContent = '中转页打开失败';
+            showMessage((err && err.message) || '链接不存在或已失效', false);
+          });
+      };
+
+      if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', init);
+      } else {
+        init();
+      }
     })();
   </script>
 </head>
 <body>
-  <p style="text-align:center;padding:50px;">正在加载...</p>
+  <div class="shell" id="shell">
+    <div class="panel">
+      <h1 class="title" id="title">正在打开页面</h1>
+      <p class="desc" id="desc">请稍候，系统正在加载目标内容。</p>
+      <div class="actions" id="actions">
+        <a class="btn primary" id="open-link" href="#" target="_blank" rel="noreferrer">打开目标页</a>
+      </div>
+    </div>
+  </div>
 </body>
 </html>

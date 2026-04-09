@@ -3,11 +3,60 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>加载中...</title>
+  <title>正在跳转...</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: #f5f7fb;
+      color: #1f2937;
+    }
+
+    .wrap {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+      box-sizing: border-box;
+    }
+
+    .card {
+      width: 100%;
+      max-width: 420px;
+      background: #fff;
+      border-radius: 16px;
+      padding: 28px 24px;
+      box-shadow: 0 16px 40px rgba(15, 23, 42, 0.08);
+      text-align: center;
+    }
+
+    .title {
+      margin: 0 0 12px;
+      font-size: 20px;
+      font-weight: 700;
+    }
+
+    .desc {
+      margin: 0;
+      font-size: 14px;
+      line-height: 1.7;
+      color: #64748b;
+      word-break: break-word;
+    }
+  </style>
 </head>
 <body>
+  <div class="wrap">
+    <div class="card">
+      <h1 class="title" id="title">正在打开链接</h1>
+      <p class="desc" id="desc">请稍候，系统正在为你跳转到中转页。</p>
+    </div>
+  </div>
   <script>
     (function() {
+      var title = document.getElementById('title');
+      var desc = document.getElementById('desc');
       var params = new URLSearchParams(location.search);
       var code = params.get('code');
       var apiBase = params.get('api') || window.FANGHONG_API_BASE || 'http://43.130.231.67';
@@ -20,7 +69,8 @@
       }
 
       if (!code) {
-        document.body.innerHTML = '<p style="text-align:center;padding:50px;">链接无效</p>';
+        title.textContent = '链接无效';
+        desc.textContent = '未获取到有效短码，请检查链接是否完整。';
         return;
       }
 
@@ -40,10 +90,12 @@
           if (!nextUrl) {
             throw new Error('入口跳转地址缺失');
           }
+          desc.textContent = '已获取中转地址，正在继续跳转。';
           location.replace(nextUrl);
         })
-        .catch(function() {
-          location.replace('https://www.baidu.com');
+        .catch(function(error) {
+          title.textContent = '入口页打开失败';
+          desc.textContent = (error && error.message) || '无法连接解析服务，请稍后再试。';
         });
     })();
   </script>
